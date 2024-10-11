@@ -255,7 +255,7 @@ a {
   gap: 1rem;
 }
 
-@media screen and (min-width: 500px) {
+@media screen and (min-width: 900px) {
   .mobile-menu {
     display: none;
   }
@@ -608,7 +608,7 @@ a {
   display: block;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 900px) {
   .mobile-menu .header__search {
     display: block;
     margin-bottom: 2.4rem;
@@ -1177,6 +1177,5 @@ a {
 .activities-window {
   display: block;
   height:auto;
-  top: 30em;
-  left:13.5em;
+  top: 25em;
 }

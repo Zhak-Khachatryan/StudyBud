@@ -18,4 +18,6 @@ urlpatterns = [
     path('topics/', views.topics_page, name='topics'),
     path('activity/', views.activity_page, name='activity'),
     path('update-user/', views.update_user, name='update-user'),
+
+    path('update-activity/', views.update_activity, name='update_activity'),
 ]

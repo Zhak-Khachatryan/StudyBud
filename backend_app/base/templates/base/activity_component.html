@@ -1,3 +1,5 @@
+{% load custom_filters %}
+
 <div class="activities">
     <div class="activities__header">
         <h2>Recent Activities</h2>
@@ -6,11 +8,11 @@
     <div class="activities__box">
         <div class="activities__boxHeader roomListRoom__header">
             <a href="{% url 'user-profile' message.user.id %}" class="roomListRoom__author">
-                <div class="avatar avatar--small">
-                    <img src="https://randomuser.me/api/portraits/women/11.jpg" />
+                <div class="avatar avatar--small status-indicator {% if message.user.last_seen|online_now %}active{% endif %}">
+                    <img src="{{message.user.avatar.url}}" />
                 </div>
                 <p>
-                    @{{message.user}}
+                    @{{message.user.username}}
                     <span>{{message.created|timesince}} ago</span>
                 </p>
             </a>

@@ -1,32 +1,77 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="{% static 'styles/style.css' %}" />
-    <title>StudyBuddy - Find study partners around the world!</title>
-  </head>
 
-  <body>
-    {% include 'navbar.html' %}
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="{% static 'styles/style.css' %}" />
+  <title>StudyBuddy - Find study partners around the world!</title>
+</head>
 
-    {% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+<body>
+  {% include 'navbar.html' %}
 
-    {% block content %}
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% block content %}
 
 
 
-    {% endblock %}
+  {% endblock %}
 
-    <script src="{% static 'js/script.js' %}"></script>
-  </body>
+  <script src="{% static 'js/script.js' %}"></script>
+  <script>
+    // Function to immediately update user activity when the page loads
+    function updateUserActivityOnLoad() {
+        fetch("{% url 'update_activity' %}", {
+            method: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'username': "{{ user.username }}"
+            })
+        });
+    }
+
+    // Call the function on page load to immediately set the user as online
+    window.onload = updateUserActivityOnLoad;
+
+    // Function to keep updating the user activity periodically
+    function updateUserActivity() {
+        fetch("{% url 'update_activity' %}", {
+            method: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'username': "{{ user.username }}"
+            })
+        });
+    }
+
+    // Polling every 30 seconds to keep updating activity
+    setInterval(updateUserActivity, 30000);  // 30 seconds
+
+    window.addEventListener("beforeunload", function (e) {
+        // Send an AJAX request before the window is closed
+        navigator.sendBeacon("{% url 'update_activity' %}", JSON.stringify({
+            'username': "{{ user.username }}",
+            'is_online': false
+        }));
+    });
+  </script>
+</body>
+
 </html>

@@ -1,13 +1,14 @@
+import json
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic, Message
-from .forms import RoomForm, UserForm
+from .models import Room, Topic, Message, User
+from .forms import RoomForm, UserForm, MyUserCreationForm
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
@@ -25,15 +26,15 @@ def login_page(request):
         return redirect('home')
 
     if request.method == "POST":
-        username = request.POST.get('username').lower()
+        email = request.POST.get('email').lower()
         password = request.POST.get('password')
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
         except:
             messages.error(request, 'User does not exist.')
 
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, email=email, password=password)
 
         if user is not None:
             login(request, user)
@@ -49,10 +50,10 @@ def logout_user(request):
     return redirect('home')
 
 def register_user(request):
-    form = UserCreationForm()
+    form = MyUserCreationForm()
 
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = MyUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
@@ -77,11 +78,11 @@ def home(request):
     room_count = rooms.count()
     room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))
 
-
     context = {'rooms': rooms,
                'topics': topics,
                'room_count': room_count,
-               'room_messages': room_messages}
+               'room_messages': room_messages,
+               }
     return render(request, "base/home.html", context)
 
 
@@ -192,7 +193,7 @@ def update_user(request):
     form = UserForm(instance=user)
 
     if request.method == "POST":
-        form = UserForm(request.POST, instance=user)
+        form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             return redirect('user-profile', pk=user.id)
@@ -214,7 +215,23 @@ def topics_page(request):
     return render(request, 'base/topics.html', context)
 
 def activity_page(request):
-    room_messages =Message.objects.all()
+    room_messages = Message.objects.all()
 
 
     return render(request, 'base/activity.html', {'room_messages': room_messages})
+
+@csrf_exempt
+def update_activity(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data.get('username')
+        is_online = data.get('is_online', True)
+
+        # Update the user's profile
+        user = User.objects.get(username=username)
+        user.is_online = is_online
+        user.last_seen = timezone.now()
+        user.save()
+
+
+        return JsonResponse({'status': 'updated'})
